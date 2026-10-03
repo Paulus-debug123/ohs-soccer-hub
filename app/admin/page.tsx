@@ -1,0 +1,11 @@
+'use client'
+import {useEffect,useState} from 'react'
+import {supabase} from '../../lib/supabase'
+export default function Admin(){const [ok,setOk]=useState(false),[teams,setTeams]=useState<any[]>([]),[name,setName]=useState(''),[color,setColor]=useState('#16a765'),[newsTitle,setNewsTitle]=useState('');const [msg,setMsg]=useState('')
+useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user)return;const p=await supabase.from('profiles').select('role').eq('id',user.id).single();setOk(p.data?.role==='admin');load()})()},[])
+async function load(){const {data}=await supabase.from('teams').select('*').order('name');setTeams(data||[])}
+async function addTeam(e:any){e.preventDefault();const r=await supabase.from('teams').insert({name,primary_color:color});setMsg(r.error?.message||'Team created');setName('');load()}
+async function addNews(e:any){e.preventDefault();const r=await supabase.from('news').insert({title:newsTitle,body:newsTitle,category:'League'});setMsg(r.error?.message||'News published for 7 days');setNewsTitle('')}
+async function delTeam(id:string){await supabase.from('teams').delete().eq('id',id);load()}
+if(!ok)return <main className="main" style={{maxWidth:700,margin:'0 auto'}}><div className="panel"><h1>Admin Site</h1><p>You need an administrator account to access this area.</p></div></main>
+return <main className="main"><h1>Admin Control Centre</h1>{msg&&<p>{msg}</p>}<div className="admin"><div className="panel"><h2>Create Team</h2><form className="form" onSubmit={addTeam}><input placeholder="Team name" value={name} onChange={e=>setName(e.target.value)} required/><input type="color" value={color} onChange={e=>setColor(e.target.value)}/><button className="btn">Create</button></form></div><div className="panel"><h2>Publish News</h2><form className="form" onSubmit={addNews}><input placeholder="News headline" value={newsTitle} onChange={e=>setNewsTitle(e.target.value)} required/><button className="btn">Publish 7-day news</button></form></div></div><div className="panel"><h2>Teams</h2>{teams.map(t=><div className="match" key={t.id}><b>{t.name}</b><button className="btn" onClick={()=>delTeam(t.id)}>Delete</button></div>)}</div></main>}

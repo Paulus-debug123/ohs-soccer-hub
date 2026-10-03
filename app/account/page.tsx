@@ -1,0 +1,7 @@
+'use client'
+import {useEffect,useState} from 'react'
+import {useRouter} from 'next/navigation'
+import {supabase} from '../../lib/supabase'
+export default function Account(){const [profile,setProfile]=useState<any>(),[player,setPlayer]=useState<any>(),router=useRouter()
+useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.push('/login');return}const p=await supabase.from('profiles').select('*').eq('id',user.id).single();setProfile(p.data);const q=await supabase.from('players').select('*,teams(name)').eq('user_id',user.id).single();setPlayer(q.data)})()},[])
+return <main className="main" style={{maxWidth:900,margin:'0 auto'}}><div className="panel"><h1>Player Account</h1>{profile&&<p>Welcome, <b>{profile.display_name}</b></p>}{player?<div className="cards"><div className="card"><span className="muted">Rating</span><strong>{player.rating}</strong></div><div className="card"><span className="muted">Position</span><strong>{player.position}</strong></div><div className="card"><span className="muted">Kit</span><strong>{player.kit_number||'—'}</strong></div><div className="card"><span className="muted">Goals</span><strong>{player.goals}</strong></div></div>:<p className="muted">Your admin must link your account to a player profile.</p>}<button className="btn" onClick={async()=>{await supabase.auth.signOut();router.push('/')}}>Sign out</button></div></main>}
